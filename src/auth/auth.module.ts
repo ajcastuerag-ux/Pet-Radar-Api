@@ -4,12 +4,13 @@ import { AuthService } from './auth.service';
 import { UsersModule } from 'src/users/users.module';
 import { TokenService } from './token/token.service';
 import { JwtModule } from '@nestjs/jwt';
+import { envs } from 'src/config/envs';
 
 @Module({
   imports:[
     UsersModule,
     JwtModule.register({
-      secret: 'asfasdfadf',
+      secret: envs.JWT_SECRET,
       signOptions: {
         expiresIn: 86400
       }

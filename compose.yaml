@@ -1,16 +1,64 @@
 version: "3.9"
 services:
-
+  migrations:
+    image: pet-radar-api:latest
+    container_name: PetRadarMigrator
+    environment:
+      - MAILER_SERVICE=${MAILER_SERVICE}
+      - MAILER_USER=${MAILER_USER}
+      - MAILER_TOKEN=${MAILER_TOKEN}
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USER=${DB_USER}
+      - DB_PORT=${DB_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - AWS_BUCKET=${AWS_BUCKET}
+      - AWS_REGION=${AWS_REGION}
+    command: ["npm","run","migration:run"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    image: pet-radar-api:latest
+    container_name: PetRadarApi
+    environment:
+      - MAILER_SERVICE=${MAILER_SERVICE}
+      - MAILER_USER=${MAILER_USER}
+      - MAILER_TOKEN=${MAILER_TOKEN}
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=${DB_HOST}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USER=${DB_USER}
+      - DB_PORT=${DB_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - AWS_BUCKET=${AWS_BUCKET}
+      - AWS_REGION=${AWS_REGION}
+    ports:
+      - 3000:3000
+    depends_on:
+      - migrations
+ 
   postgres:
     image: postgis/postgis:16-master
     container_name: 511-petradar-db
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_PASSWORD=secret123
-      - POSTGRES_DB=petradardb
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data_db:/var/lib/postgresql
+ 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d petradardb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
  
   redis:
     image: redis
